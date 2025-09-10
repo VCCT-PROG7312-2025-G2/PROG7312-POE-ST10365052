@@ -1,0 +1,177 @@
+﻿@{
+    ViewData["Title"] = "Report Issues";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewData["Title"] - Municipality</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background-color: white;
+            color: black;
+        }
+
+        header {
+            background-color: navy;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .container {
+            max-width: 700px;
+            margin: 30px auto;
+            background-color: white;
+            border: 1px solid gray;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+
+        label {
+            display: block;
+            margin-top: 15px;
+            font-weight: bold;
+        }
+
+        input[type="text"], textarea, select, input[type="file"] {
+            width: 100%;
+            padding: 10px;
+            margin-top: 8px;
+            border-radius: 5px;
+            border: 1px solid gray;
+            font-size: 1em;
+        }
+
+        textarea {
+            height: 120px;
+        }
+
+        .progress-container {
+            margin-top: 20px;
+        }
+
+        .progress-bar {
+            height: 20px;
+            background-color: lightgray;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            width: 0%;
+            background-color: green;
+            text-align: center;
+            color: white;
+            font-size: 0.9em;
+            line-height: 20px;
+            transition: width 0.3s ease;
+        }
+
+        .actions {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+            .actions button {
+                background-color: navy;
+                color: white;
+                border: none;
+                padding: 12px 20px;
+                border-radius: 8px;
+                cursor: pointer;
+                font-size: 1em;
+            }
+
+                .actions button:hover {
+                    background-color: darkblue;
+                }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 15px;
+            text-decoration: none;
+            color: navy;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Report an Issue</h1>
+        <p>Please provide details so we can assist you effectively</p>
+    </header>
+
+    <div class="container">
+        <!-- enctype required for file uploads -->
+        <form method="post" asp-action="SubmitIssue" asp-controller="Issues" enctype="multipart/form-data">
+            <label for="location">Location of Issue *</label>
+            <input type="text" id="location" name="location" required>
+
+            <label for="category">Category *</label>
+            <select id="category" name="category" required>
+                <option value="">-- Select a Category --</option>
+                <option value="Roads">Roads & Potholes</option>
+                <option value="Streetlights">Streetlights</option>
+                <option value="Waste">Waste Collection</option>
+                <option value="Water">Water & Sewage</option>
+                <option value="Other">Other</option>
+            </select>
+
+            <label for="description">Detailed Description *</label>
+            <textarea id="description" name="description" required></textarea>
+
+            <label for="files">Attach Files (PDF, Images, etc.)</label>
+            <input type="file" id="files" name="files" multiple accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
+
+            <!-- Progress Tracker -->
+            <div class="progress-container">
+                <p>Form Completion Progress:</p>
+                <div class="progress-bar">
+                    <div id="progressFill" class="progress-bar-fill">0%</div>
+                </div>
+            </div>
+
+            <div class="actions">
+                <button type="submit">Submit Issue</button>
+            </div>
+        </form>
+
+        <a href="~/Home/Index" class="back-link">← Back to Home</a>
+    </div>
+
+    <script>
+        const locationInput = document.getElementById("location");
+        const categorySelect = document.getElementById("category");
+        const descriptionInput = document.getElementById("description");
+        const filesInput = document.getElementById("files");
+        const progressFill = document.getElementById("progressFill");
+
+        function updateProgress() {
+            let completed = 0;
+            if (locationInput.value.trim() !== "") completed++;
+            if (categorySelect.value !== "") completed++;
+            if (descriptionInput.value.trim() !== "") completed++;
+            if (filesInput.files.length > 0) completed++;
+
+            let percent = (completed / 4) * 100;
+            progressFill.style.width = percent + "%";
+            progressFill.textContent = Math.round(percent) + "%";
+        }
+
+        locationInput.addEventListener("input", updateProgress);
+        categorySelect.addEventListener("change", updateProgress);
+        descriptionInput.addEventListener("input", updateProgress);
+        filesInput.addEventListener("change", updateProgress);
+    </script>
+
+</body>
+</html>
