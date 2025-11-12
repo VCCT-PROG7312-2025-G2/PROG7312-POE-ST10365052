@@ -1,0 +1,262 @@
+﻿@model List<PROG7312.Models.Issues>
+@{
+    ViewData["Title"] = "Service Request Status";
+    Layout = null;
+    var statuses = ViewBag.Statuses as List<string> ?? new List<string>();
+    var selectedStatus = ViewBag.SelectedStatus as string ?? "";
+    var searchValue = ViewBag.Search as string ?? "";
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewData["Title"] - Municipality</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background-color: white;
+            color: black;
+        }
+
+        header {
+            background-color: navy;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        nav {
+            background-color: lightgray;
+            padding: 10px;
+            text-align: center;
+        }
+
+            nav a {
+                margin: 0 15px;
+                text-decoration: none;
+                color: black;
+                font-weight: bold;
+            }
+
+        .search-section {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            margin: 25px 0;
+        }
+
+            .search-section input, .search-section select {
+                padding: 10px;
+                font-size: 1em;
+                border-radius: 5px;
+                border: 1px solid gray;
+            }
+
+            .search-section button {
+                background-color: navy;
+                color: white;
+                border: none;
+                padding: 10px 20px;
+                border-radius: 8px;
+                cursor: pointer;
+                font-size: 1em;
+            }
+
+                .search-section button:hover {
+                    background-color: darkblue;
+                }
+
+        h2.section-title {
+            text-align: center;
+            margin-top: 40px;
+            color: navy;
+        }
+
+        .data-structure-section {
+            text-align: center;
+            margin-top: 20px;
+            background-color: #f7faff;
+            border-top: 2px solid navy;
+            border-bottom: 2px solid navy;
+            padding: 15px;
+        }
+
+            .data-structure-section h4 {
+                margin: 5px 0;
+                color: #333;
+            }
+
+        .container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            padding: 30px;
+        }
+
+        .card {
+            background-color: white;
+            border: 1px solid gray;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            transition: transform 0.2s ease;
+        }
+
+            .card:hover {
+                transform: scale(1.03);
+                cursor: pointer;
+            }
+
+            .card h3 {
+                margin-top: 0;
+                color: navy;
+            }
+
+            .card p {
+                margin: 6px 0;
+            }
+
+        .status-pending {
+            color: darkorange;
+            font-weight: bold;
+        }
+
+        .status-inprogress {
+            color: dodgerblue;
+            font-weight: bold;
+        }
+
+        .status-completed {
+            color: green;
+            font-weight: bold;
+        }
+
+        .status-rejected {
+            color: red;
+            font-weight: bold;
+        }
+
+        .no-results {
+            text-align: center;
+            color: gray;
+            margin: 30px;
+            font-style: italic;
+        }
+
+        footer {
+            background-color: navy;
+            color: white;
+            text-align: center;
+            padding: 15px;
+            margin-top: 30px;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Service Request Tracker</h1>
+        <p>Check the status of your submitted service requests</p>
+    </header>
+
+    <nav>
+        <a href="~/Home/Index">Home</a>
+        <a href="~/Home/About">About Us</a>
+        <a href="~/Home/Contact">Contact</a>
+    </nav>
+
+    <!-- Search and Filter -->
+    <form class="search-section" method="get" asp-action="ServiceView" asp-controller="Issues">
+        <input type="text" id="searchInput" name="search" placeholder="Enter your Request ID..." value="@searchValue" />
+        <select id="statusFilter" name="status">
+            <option value="">All Statuses</option>
+            @foreach (var status in statuses)
+            {
+                <option value="@status" selected="@(status == selectedStatus ? "selected" : null)">@status</option>
+            }
+        </select>
+        <button type="submit">Search</button>
+        <button type="button" onclick="resetAndSubmit()">Reset</button>
+    </form>
+
+    <!-- Requests Display -->
+    <h2 class="section-title">Your Service Requests</h2>
+
+    <!-- Data Structures Display -->
+    <div class="data-structure-section">
+        @if (ViewBag.BST != null)
+        {
+            <div>
+                <h4>BST Root Location: @ViewBag.BST.Root?.Data?.Location</h4>
+            </div>
+        }
+        @if (ViewBag.MinHeap != null)
+        {
+            <div>
+                <h4>MinHeap Top Category: @(ViewBag.MinHeap.ExtractMin()?.Category ?? "None")</h4>
+            </div>
+        }
+        @if (ViewBag.Graph != null && Model != null && Model.Any())
+        {
+            <div>
+                <h4>Graph Nodes: @((ViewBag.Graph as PROG7312.Models.serviceRequestGraph)?.BFS(Model.FirstOrDefault())?.Count ?? 0)</h4>
+            </div>
+        }
+    </div>
+
+    <div class="container" id="requestContainer">
+        @if (Model != null && Model.Any())
+        {
+            foreach (var issue in Model)
+            {
+                <div class="card" data-location="@issue.Location" data-category="@issue.Category">
+                    <h3>Location: @issue.Location</h3>
+                    <p><strong>Category:</strong> @issue.Category</p>
+                    <p><strong>Description:</strong> @issue.Description</p>
+                    <p>
+                        <strong>Status:</strong>
+                        <span class="status-pending">Pending</span>
+                    </p>
+                    <p>
+                        <strong>Files:</strong>
+                        @if (issue.Files != null && issue.Files.Any())
+                        {
+                            <ul>
+                                @foreach (var file in issue.Files)
+                                {
+                                    <li>@file.FileName</li>
+                                }
+                            </ul>
+                        }
+                        else
+                        {
+                            <span>No files attached</span>
+                        }
+                    </p>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="no-results">No service requests found.</div>
+        }
+    </div>
+
+    <footer>
+        <p>&copy; 2025 City of Cape Town Municipality. All rights reserved.</p>
+    </footer>
+
+    <script>
+        function resetAndSubmit() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('statusFilter').value = '';
+            document.querySelector('.search-section').submit();
+        }
+    </script>
+
+</body>
+</html>

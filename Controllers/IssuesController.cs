@@ -36,6 +36,54 @@ namespace PROG7312.Controllers
             return RedirectToAction("Index", "Home");
         }
 
+        // C#
+        public IActionResult ServiceView(string search = "", string status = "")
+        {
+            var allIssues = issues.ToList();
+
+            // BST for fast search by Location
+            var bst = new serviceRequestBST();
+            foreach (var issue in allIssues)
+                bst.Insert(issue);
+
+            // Build MinHeap for priority by Category
+            var minHeap = new serviceRequestMinHeap();
+            foreach (var issue in allIssues)
+                minHeap.Insert(issue);
+
+            // Build Graph for relationships 
+            var graph = new serviceRequestGraph();
+            foreach (var issue in allIssues)
+            {
+                foreach (var other in allIssues)
+                {
+                    if (issue != other && issue.Location == other.Location)
+                        graph.AddEdge(issue, other);
+                }
+            }
+            // Use BST for search
+            if (!string.IsNullOrEmpty(search))
+            {
+                var found = bst.Search(search);
+                allIssues = found != null ? new List<Issues> { found } : new List<Issues>();
+            }
+
+            // Filter by status
+            if (!string.IsNullOrEmpty(status))
+                allIssues = allIssues.Where(i => i.Category.Equals(status, StringComparison.OrdinalIgnoreCase)).ToList();
+
+            // Passes available status to the dropdown
+            ViewBag.Statuses = issues.Select(i => i.Category).Distinct().ToList();
+            ViewBag.SelectedStatus = status;
+            ViewBag.Search = search;
+
+            ViewBag.BST = bst;
+            ViewBag.MinHeap = minHeap;
+            ViewBag.Graph = graph;
+
+            return View("~/Views/Home/serviceView.cshtml", allIssues);
+        }
+
     }
 }
 

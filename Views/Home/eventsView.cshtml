@@ -1,0 +1,256 @@
+﻿@model List<PROG7312.Models.Events>
+@{
+    ViewData["Title"] = "Local Events";
+    Layout = null;
+    var categories = ViewBag.Categories as List<string> ?? new List<string>();
+    var selectedCategory = ViewBag.SelectedCategory as string ?? "";
+    var searchValue = ViewBag.Search as string ?? "";
+    var recommended = ViewBag.Recommended as List<PROG7312.Models.Events>;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewData["Title"] - Municipality</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background-color: white;
+            color: black;
+        }
+
+        header {
+            background-color: navy;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        nav {
+            background-color: lightgray;
+            padding: 10px;
+            text-align: center;
+        }
+
+            nav a {
+                margin: 0 15px;
+                text-decoration: none;
+                color: black;
+                font-weight: bold;
+            }
+
+        .search-section {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            margin: 25px 0;
+        }
+
+            .search-section input, .search-section select {
+                padding: 10px;
+                font-size: 1em;
+                border-radius: 5px;
+                border: 1px solid gray;
+            }
+
+            .search-section button {
+                background-color: navy;
+                color: white;
+                border: none;
+                padding: 10px 20px;
+                border-radius: 8px;
+                cursor: pointer;
+                font-size: 1em;
+            }
+
+                .search-section button:hover {
+                    background-color: darkblue;
+                }
+
+        h2.section-title {
+            text-align: center;
+            margin-top: 40px;
+            color: navy;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            padding: 30px;
+        }
+
+        .card {
+            background-color: white;
+            border: 1px solid gray;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            transition: transform 0.2s ease;
+        }
+
+            .card:hover {
+                transform: scale(1.03);
+                cursor: pointer;
+            }
+
+            .card h3 {
+                margin-top: 0;
+                color: navy;
+            }
+
+            .card p {
+                margin: 6px 0;
+            }
+
+        .recommended {
+            background-color: #f7faff;
+            border-top: 2px solid navy;
+            padding: 20px 0;
+        }
+
+        footer {
+            background-color: navy;
+            color: white;
+            text-align: center;
+            padding: 15px;
+            margin-top: 30px;
+        }
+
+        .no-results {
+            text-align: center;
+            color: gray;
+            margin: 30px;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Upcoming Events in Cape Town</h1>
+        <p>Stay informed and explore events happening in your community</p>
+    </header>
+
+    <nav>
+        <a href="~/Home/Index">Home</a>
+        <a href="~/Home/About">About Us</a>
+        <a href="~/Home/Contact">Contact</a>
+    </nav>
+
+    <!-- Search Bar & Category Filter -->
+    <form class="search-section" method="get" asp-action="Search" asp-controller="Events">
+        <input type="text" id="searchInput" name="search" placeholder="Search events by name..." value="@searchValue" />
+        <select id="categoryFilter" name="category">
+            <option value="">All Categories</option>
+            @foreach (var cat in categories)
+            {
+                <option value="@cat" selected="@(cat == selectedCategory ? "selected" : null)">@cat</option>
+            }
+        </select>
+        <button type="submit">Search</button>
+        <button type="button" onclick="resetAndSubmit()">Reset</button>
+
+
+    </form>
+
+    <!-- Main Events Section -->
+    <h2 class="section-title">All Events</h2>
+    <div class="container" id="eventContainer">
+        @if (Model != null && Model.Any())
+        {
+            foreach (var ev in Model)
+            {
+                <div class="card" data-name="@ev.Title" data-category="@ev.Category">
+                    <h3>@ev.Title</h3>
+                    <p><strong>Date:</strong> @ev.Date.ToString("dd MMMM yyyy")</p>
+                    <p><strong>Category:</strong> @ev.Category</p>
+                    <p>@ev.Description</p>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="no-results">No events found.</div>
+        }
+    </div>
+
+    <!-- Recommended Events BELOW main events -->
+    <div class="recommended">
+        <h2 class="section-title">Recommended Events for You</h2>
+        <div class="container" id="recommendedContainer">
+            @if (recommended != null && recommended.Any())
+            {
+                foreach (var ev in recommended)
+                {
+                    <div class="card" data-name="@ev.Title" data-category="@ev.Category">
+                        <h3>@ev.Title</h3>
+                        <p><strong>Date:</strong> @ev.Date.ToString("dd MMMM yyyy")</p>
+                        <p><strong>Category:</strong> @ev.Category</p>
+                        <p>@ev.Description</p>
+                    </div>
+                }
+            }
+            else
+            {
+                <p class="no-results">No recommended events available.</p>
+            }
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2025 City of Cape Town Municipality. All rights reserved.</p>
+    </footer>
+
+    <script>
+        function filterEvents() {
+            const searchQuery = document.getElementById('searchInput').value.toLowerCase();
+            const category = document.getElementById('categoryFilter').value.toLowerCase();
+            const cards = document.querySelectorAll('#eventContainer .card');
+            const noResults = document.getElementById('noResultsMessage');
+
+            let visibleCount = 0;
+
+            cards.forEach(card => {
+                const name = card.dataset.name.toLowerCase();
+                const cardCategory = card.dataset.category.toLowerCase();
+
+                const matchesName = searchQuery === "" || name.includes(searchQuery);
+                const matchesCategory = category === "" || cardCategory === category;
+
+                if (matchesName && matchesCategory) {
+                    card.style.display = 'block';
+                    visibleCount++;
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            noResults.style.display = visibleCount === 0 ? 'block' : 'none';
+        }
+
+        function resetFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('categoryFilter').value = '';
+            document.getElementById('noResultsMessage').style.display = 'none';
+
+            document.querySelectorAll('#eventContainer .card').forEach(card => {
+                card.style.display = 'block';
+            });
+        }
+
+        function resetAndSubmit() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('categoryFilter').value = '';
+            document.querySelector('.search-section').submit();
+        }
+
+
+    </script>
+
+</body>
+</html>
