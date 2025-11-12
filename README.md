@@ -49,13 +49,87 @@ All form inputs are validated with both client-side and server-side checks.
 
 Recommended deployment behind HTTPS.
 
-📌 Roadmap
- Multi-language support
+Compilation
 
- User authentication & role-based access
+Open the project in Visual Studio 2022 or higher.
 
- Service request tracking system
+Ensure .NET 8 SDK and ASP.NET Core MVC workload are installed.
 
- Admin dashboard with analytics
+Restore dependencies via:
 
- Email/SMS notifications
+dotnet restore
+
+
+Build the solution using Ctrl + Shift + B or:
+
+dotnet build
+
+
+Running the Application
+
+Set the main web project as the startup project.
+
+Press F5 or run:
+
+dotnet run
+
+
+The application will start on https://localhost:5001/.
+
+Using the Programme
+
+Home Page: Displays service options such as reporting issues and viewing events.
+
+Service Request Form: Allows users to log a new request (e.g., pothole, streetlight fault).
+
+Service Request Status Page: Displays the current status of logged issues, including progress updates handled by custom data structures.
+
+Events Page: Lists local events with a recommendation system based on categories.
+
+Implemented Data Structures and Their Role
+1. Binary Search Tree (BST)
+
+Purpose: Used to efficiently store and retrieve service requests by location.
+
+Role in Efficiency:
+
+Lookup and insertion operations are O(log n), enabling fast retrieval of request statuses.
+
+Example:
+
+var statusNode = serviceRequestBST.Search("Cape Town Central");
+
+
+This allows the system to quickly fetch all requests from a specific area.
+
+Contribution: Enhanced data access speed and made the “Service Request Status” page dynamic and responsive.
+
+2. Min Heap
+
+Purpose: Prioritizes urgent service requests based on their priority value or severity.
+
+Role in Efficiency:
+
+The smallest (most urgent) request is always on top — O(1) for access.
+
+Example:
+
+var urgentTask = requestHeap.GetMin();
+
+
+This allows the system to automatically process the most critical reports first.
+
+3. Graph
+
+Purpose: Models the relationships between locations (e.g., districts and service zones).
+
+Role in Efficiency:
+
+Used for optimizing routing between connected service zones.
+
+Example:
+
+var shortestRoute = locationGraph.FindShortestPath("Zone A", "Zone D");
+
+
+Ensures service assignments are optimized based on proximity and connectivity.
